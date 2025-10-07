@@ -41,6 +41,16 @@ const TAG_STYLES = {
   'Perigoso': 'bg-red-600 text-white',
 };
 
+const ThreatLabel: React.FC<{ level: number }> = ({ level }) => {
+    let text = 'NENHUMA';
+    let color = 'text-gray-300';
+    if (level > 75) { text = 'CRÍTICO'; color = 'text-red-400 animate-pulse'; }
+    else if (level > 40) { text = 'ELEVADO'; color = 'text-orange-400'; }
+    else if (level > 10) { text = 'MODERADO'; color = 'text-yellow-400'; }
+    else if (level > 0) { text = 'BAIXO'; color = 'text-green-400'; }
+    return <span className={`font-bold ${color}`}>{text}</span>
+};
+
 const EvidenceLab: React.FC<EvidenceLabProps> = ({ onBack, logEvent }) => {
     const [activeTab, setActiveTab] = useState<'apk' | 'network' | null>(null);
     const [isScanning, setIsScanning] = useState(false);
@@ -70,16 +80,23 @@ const EvidenceLab: React.FC<EvidenceLabProps> = ({ onBack, logEvent }) => {
 
 
     const threatLevel = useMemo(() => {
+        const relevantData = ANALYSIS_DATA.filter(item => {
+            if (!activeTab) return false;
+            return item.type === (activeTab === 'apk' ? 'permission' : 'traffic');
+        });
+        
         const totalWeight = results.reduce((acc, item) => {
             if (item.tag === 'Vigilância') return acc + 1;
             if (item.tag === 'Perigoso') return acc + 2;
             return acc;
         }, 0);
-        const maxWeight = ANALYSIS_DATA.filter(item => item.type === (activeTab === 'apk' ? 'permission' : 'traffic') || activeTab === null).reduce((acc, item) => {
+        
+        const maxWeight = relevantData.reduce((acc, item) => {
              if (item.tag === 'Vigilância') return acc + 1;
             if (item.tag === 'Perigoso') return acc + 2;
             return acc;
         }, 0);
+
         return maxWeight > 0 ? (totalWeight / maxWeight) * 100 : 0;
     }, [results, activeTab]);
     
@@ -136,8 +153,8 @@ const EvidenceLab: React.FC<EvidenceLabProps> = ({ onBack, logEvent }) => {
             <p className="text-lg mb-6">A vigilância deixa rastros técnicos. Use nosso terminal de análise para "escanear" um aplicativo de jogo genérico e inspecionar as permissões e conexões suspeitas que encontramos.</p>
             
             <div className="mb-4">
-                <p className="font-mono text-lg mb-2">NÍVEL DE AMEAÇA DETECTADO:</p>
-                <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-6">
+                <p className="font-mono text-lg mb-2">NÍVEL DE AMEAÇA: <ThreatLabel level={threatLevel} /></p>
+                <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-6 overflow-hidden">
                     <div className="bg-gradient-to-r from-yellow-500 via-orange-500 to-red-600 h-6 rounded-full transition-all duration-500 text-center text-white font-bold flex items-center justify-center" style={{ width: `${threatLevel}%` }}>
                        {threatLevel > 10 && `${threatLevel.toFixed(0)}%`}
                     </div>
@@ -152,14 +169,22 @@ const EvidenceLab: React.FC<EvidenceLabProps> = ({ onBack, logEvent }) => {
                         <button onClick={() => runScan('network')} disabled={isScanning} className={`px-4 py-1 rounded ${activeTab === 'network' ? 'bg-[#CC0033] text-white' : 'bg-gray-400 dark:bg-gray-700 hover:bg-gray-500 dark:hover:bg-gray-600'} disabled:opacity-50`}>Analisar Tráfego (Rede)</button>
                     </div>
                     <div className="flex-grow p-2 overflow-y-auto bg-gray-200 dark:bg-[#0c142b]">
-                        {isScanning && <p className="text-yellow-600 dark:text-yellow-400 animate-pulse">&gt; Escaneando sistema... Por favor, aguarde.</p>}
                         {!activeTab && <p className="text-gray-500">&gt; Selecione uma análise para começar.</p>}
                         {results.map(item => (
-                            <div key={item.id} onClick={() => setSelectedItem(item)} className={`flex items-center space-x-2 p-1 cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-700 ${selectedItem?.id === item.id ? 'bg-gray-300 dark:bg-gray-700' : ''}`}>
+                            <div key={item.id} onClick={() => setSelectedItem(item)} className={`flex items-center space-x-2 p-1 cursor-pointer rounded-sm hover:bg-gray-300 dark:hover:bg-gray-700 ${selectedItem?.id === item.id ? 'bg-gray-400 dark:bg-gray-700' : ''}`}>
                                 <span className={`px-2 py-0.5 text-xs rounded-full ${TAG_STYLES[item.tag]}`}>{item.tag}</span>
                                 <span className="text-cyan-700 dark:text-cyan-400 flex-grow">{item.line}</span>
                             </div>
                         ))}
+                         {isScanning && (
+                            <div className="flex items-center mt-2">
+                                <span className="text-yellow-600 dark:text-yellow-400">&gt; Escaneando...</span>
+                                <div className="w-2 h-4 bg-yellow-400 animate-blink ml-2"></div>
+                            </div>
+                        )}
+                        {!isScanning && activeTab && (
+                             <p className="text-green-500 mt-2">&gt; Análise concluída.</p>
+                        )}
                     </div>
                 </div>
 
@@ -188,12 +213,21 @@ const EvidenceLab: React.FC<EvidenceLabProps> = ({ onBack, logEvent }) => {
                             )}
                         </div>
                     ) : (
-                        <div className="flex items-center justify-center h-full text-gray-500">
-                            <p>&gt; Clique em um item da análise para ver os detalhes.</p>
+                        <div className="flex items-center justify-center h-full text-gray-500 p-4 text-center">
+                            <p>&gt; {activeTab ? 'Clique em um item da análise para ver os detalhes.' : 'Selecione uma análise para começar.'}</p>
                         </div>
                     )}
                 </div>
             </div>
+             <style>{`
+                @keyframes blink {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0; }
+                }
+                .animate-blink {
+                    animation: blink 1s step-end infinite;
+                }
+            `}</style>
         </ModuleContainer>
     );
 };

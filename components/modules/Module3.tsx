@@ -9,10 +9,22 @@ interface Module3Props {
 // --- SUBCOMPONENTS ---
 
 const Tooltip: React.FC<{ text: string; children: React.ReactNode }> = ({ text, children }) => (
-    <span className="relative group">
-        <span className="text-yellow-500 dark:text-yellow-400 underline decoration-dotted cursor-help">{children}</span>
-        <div className="absolute bottom-full mb-2 w-72 bg-gray-800 text-white text-sm rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none transform -translate-x-1/2 left-1/2">
+    <span className="relative group inline-block">
+        <span 
+            className="text-yellow-500 dark:text-yellow-400 underline decoration-dotted cursor-help focus:outline-none focus:ring-2 focus:ring-yellow-500 rounded"
+            tabIndex={0}
+            role="button"
+            aria-describedby="tooltip-text"
+        >
+            {children}
+        </span>
+        <div 
+            id="tooltip-text"
+            role="tooltip"
+            className="absolute bottom-full mb-3 w-72 bg-gray-900 dark:bg-black text-white text-sm rounded-lg p-3 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300 z-10 pointer-events-none transform -translate-x-1/2 left-1/2 shadow-lg"
+        >
             {text}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-gray-900 dark:border-t-black"></div>
         </div>
     </span>
 );
@@ -23,7 +35,7 @@ const ConsentPopup: React.FC<{ onAccept: () => void }> = ({ onAccept }) => (
             <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Para continuar, aceite nossos Termos!</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Atualizamos nossas políticas para melhorar sua experiência.</p>
             
-            <div className="h-24 overflow-y-scroll p-3 bg-gray-100 dark:bg-black dark:bg-opacity-50 border border-gray-300 dark:border-gray-700 text-[10px] text-gray-600 dark:text-gray-400 space-y-2 leading-tight">
+            <div className="h-24 overflow-y-scroll p-3 bg-gray-100 dark:bg-black dark:bg-opacity-50 border border-gray-300 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400 space-y-2 leading-tight">
                 <p>Ao aceitar, você concorda que o software anti-cheat "Guardian Shield" opere em <Tooltip text="O nível mais profundo do seu sistema operacional. O anti-cheat terá o mesmo poder que o próprio Windows/Linux, podendo ver e fazer TUDO.">nível de kernel (Ring 0)</Tooltip>, monitorando continuamente todos os processos, arquivos e tráfego de rede, mesmo quando o jogo não está em execução. Adicionalmente, coletamos <Tooltip text="Dados sobre como você joga, o que você clica, por quanto tempo joga, seu hardware, etc. Tudo que você faz no jogo.">dados de telemetria</Tooltip>, incluindo, mas não se limitando a: especificações de hardware, softwares instalados, padrões de uso, e identificadores únicos de dispositivo. Estes dados podem ser compartilhados com nossos <Tooltip text="Empresas de publicidade como Google e Facebook, que usam seus dados para te mostrar anúncios direcionados dentro e fora do jogo.">parceiros de publicidade e análise</Tooltip> para personalizar sua experiência e para fins de marketing. O tratamento destes dados é essencial para a funcionalidade do serviço e sua continuidade implica na aceitação da <Tooltip text="Significa que eles podem coletar o que quiserem, sem especificar limites. É um cheque em branco para o uso dos seus dados.">coleta e tratamento irrestrito</Tooltip> dos seus dados conforme descrito, renunciando a contestações futuras sobre a necessidade de tal monitoramento para a integridade do ambiente de jogo. Você também concorda em receber comunicações de marketing por email e notificações push.</p>
             </div>
             

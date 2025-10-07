@@ -103,8 +103,8 @@ const App: React.FC = () => {
             
             <div className="mb-8 px-4">
                 <p className="text-center text-gray-600 dark:text-gray-400 mb-2">Progresso da Jornada:</p>
-                <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-4">
-                    <div className="bg-gradient-to-r from-teal-500 to-green-500 h-4 rounded-full transition-all duration-500 text-center text-white font-bold text-xs flex items-center justify-center" style={{ width: `${progress}%` }}>
+                <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+                    <div className="bg-gradient-to-r from-teal-500 to-green-500 h-4 rounded-full transition-all duration-500 text-center text-white font-bold text-xs flex items-center justify-center animate-shimmer" style={{ width: `${progress}%`, backgroundSize: '200% 100%' }}>
                         {progress > 10 && `${progress.toFixed(0)}%`}
                     </div>
                 </div>
@@ -170,6 +170,13 @@ const App: React.FC = () => {
         }
         .animate-fade-in {
           animation: fade-in 0.5s ease-out forwards;
+        }
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        .animate-shimmer {
+          animation: shimmer 3s linear infinite;
         }
         html.text-sm { font-size: 14px; }
         html.text-base { font-size: 16px; }

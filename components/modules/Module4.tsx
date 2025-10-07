@@ -108,22 +108,30 @@ const PasswordStrengthChecker: React.FC<{ logEvent: (event: string, data?: objec
 
 
 const GuideItem: React.FC<{ title: string; isChecked: boolean; onToggle: () => void; children: React.ReactNode; }> = ({ title, isChecked, onToggle, children }) => (
-  <div className={`bg-gray-100 dark:bg-gray-800 dark:bg-opacity-60 p-6 rounded-lg border-l-4 ${isChecked ? 'border-green-500' : 'border-green-800 dark:border-[#008000]'} transition-colors duration-300`}>
-    <label className="flex items-start cursor-pointer">
-      <div className="flex-shrink-0 mt-1">
-        <input 
-          type="checkbox"
-          checked={isChecked}
-          onChange={onToggle}
-          className="form-checkbox h-6 w-6 text-green-500 bg-gray-300 dark:bg-gray-700 border-gray-600 rounded focus:ring-green-500"
-        />
-      </div>
-      <div className="ml-4">
-        <h4 className={`text-xl font-bold ${isChecked ? 'text-green-600 dark:text-green-400' : 'text-teal-700 dark:text-[#00FFFF]'}`}>{title}</h4>
-        <div className="text-gray-700 dark:text-gray-300 space-y-2 mt-2">{children}</div>
-      </div>
+    <label className={`block bg-gray-100 dark:bg-gray-800 dark:bg-opacity-60 p-6 rounded-lg border-l-4 ${isChecked ? 'border-green-500' : 'border-teal-500 dark:border-[#00FFFF]'} transition-all duration-300 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700`}>
+        <div className="flex items-start">
+            <div className="flex-shrink-0 mt-1 relative flex items-center">
+                <input 
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={onToggle}
+                  className="appearance-none h-6 w-6 border-2 rounded transition-colors duration-200
+                             border-gray-400 dark:border-gray-500 bg-gray-300 dark:bg-gray-900
+                             checked:bg-green-500 checked:border-green-600
+                             focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800"
+                />
+                 {isChecked && (
+                    <svg className="w-4 h-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                 )}
+            </div>
+          <div className="ml-4">
+            <h4 className={`text-xl font-bold ${isChecked ? 'text-green-600 dark:text-green-400 line-through' : 'text-teal-700 dark:text-[#00FFFF]'}`}>{title}</h4>
+            <div className={`text-gray-700 dark:text-gray-300 space-y-2 mt-2 transition-opacity ${isChecked ? 'opacity-70' : 'opacity-100'}`}>{children}</div>
+          </div>
+        </div>
     </label>
-  </div>
 );
 
 
@@ -148,7 +156,7 @@ const Module4: React.FC<Module4Props> = ({ onBack, logEvent }) => {
         Estar ciente dos riscos é o primeiro passo. O segundo é agir. A autonomia digital não é sobre se desconectar, mas sobre usar a tecnologia de forma mais segura e consciente. Marque os itens abaixo para completar seu guia de sobrevivência.
       </p>
       
-      <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-4 mb-6">
+      <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-4 mb-6 overflow-hidden">
         <div className="bg-gradient-to-r from-teal-500 to-green-500 h-4 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
       </div>
 

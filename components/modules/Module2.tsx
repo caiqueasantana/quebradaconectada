@@ -55,7 +55,7 @@ const MalwareAlert: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     
     return (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-            <div className="bg-[#1a0000] border-4 border-double border-red-500 rounded-lg max-w-2xl w-full p-6 animate-fade-in text-center shadow-lg shadow-red-500/50">
+            <div className="bg-[#1a0000] border-4 border-double border-red-500 rounded-lg max-w-2xl w-full p-6 animate-fade-in text-center animate-pulse-shadow-red">
                 <h2 className="text-4xl font-bold text-red-500 font-mono animate-pulse">! VIOLAÇÃO DE SEGURANÇA !</h2>
                 <div className="mt-4">
                     <Terminal lines={alertLines} />
@@ -66,6 +66,15 @@ const MalwareAlert: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 >
                     Finalizar Simulação (Ufa!)
                 </button>
+                 <style>{`
+                    @keyframes pulse-shadow-red {
+                      0%, 100% { box-shadow: 0 0 20px 5px rgba(239, 68, 68, 0.4); }
+                      50% { box-shadow: 0 0 45px 15px rgba(239, 68, 68, 0.8); }
+                    }
+                    .animate-pulse-shadow-red {
+                        animation: pulse-shadow-red 2s infinite;
+                    }
+                 `}</style>
             </div>
         </div>
     );
@@ -123,10 +132,20 @@ const CVE_DATA = [
 ];
 
 const CVECard: React.FC<{ cve: typeof CVE_DATA[0] }> = ({ cve }) => (
-    <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-red-500">
-        <h4 className="text-xl font-bold text-red-400">{cve.title}</h4>
-        <p className="font-mono text-sm text-yellow-400 mt-1">{cve.cve}</p>
-        <p className="mt-2 text-gray-300">{cve.description}</p>
+    <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-red-500 flex flex-col h-full">
+        <div className="flex justify-between items-start gap-4">
+            <div>
+                <h4 className="text-xl font-bold text-red-400">{cve.title}</h4>
+                <p className="font-mono text-sm text-yellow-400 mt-1">{cve.cve}</p>
+            </div>
+             <div className="text-center flex-shrink-0">
+                <div className="p-2 bg-red-900 rounded-full inline-block">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                </div>
+                <span className="block text-xs font-bold text-red-400 mt-1 uppercase">{cve.risk}</span>
+            </div>
+        </div>
+        <p className="mt-2 text-gray-300 flex-grow">{cve.description}</p>
     </div>
 );
 

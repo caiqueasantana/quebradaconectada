@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import ModuleContainer from '../shared/ModuleContainer';
+import { GoogleGenAI } from "@google/genai";
 
 interface TelemetryLog {
   id: number;
@@ -24,13 +25,61 @@ const Module1: React.FC<Module1Props> = ({ onBack, logEvent }) => {
   const [clicks, setClicks] = useState(0);
   const [dataPoints, setDataPoints] = useState(0);
   const [logs, setLogs] = useState<TelemetryLog[]>([]);
+  const [location, setLocation] = useState<string>('Obtendo localização...');
+  const lastClickTime = useRef<number>(0);
+  
+  // Initialize AI client
+  const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
+
   const [profile, setProfile] = useState<PredictiveProfile>({
       engagement: 'Baixo',
-      location: 'Carapicuíba, BR (inferido)',
+      location: 'Obtendo localização...',
       clickPattern: 'Esporádico',
       estimatedAge: '13-17',
   });
-  const lastClickTime = useRef<number>(0);
+
+  useEffect(() => {
+    const fetchLocation = async (latitude: number, longitude: number) => {
+        try {
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: `Baseado nestas coordenadas (Latitude: ${latitude}, Longitude: ${longitude}), qual é a cidade e país? Responda APENAS com o formato 'Cidade, SiglaDoPaís' (ex: 'São Paulo, BR'). Não adicione nenhum outro texto ou explicação.`,
+            });
+            const locationText = response.text.trim();
+            setLocation(locationText || 'Localização Indeterminada');
+        } catch (error) {
+            console.error("Error reverse geocoding:", error);
+            setLocation('Não foi possível determinar via IA');
+        }
+    };
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                fetchLocation(position.coords.latitude, position.coords.longitude);
+            },
+            (error) => {
+                console.error("Geolocation error:", error);
+                let errorMessage = 'Localização negada pelo usuário.';
+                if (error.code === error.PERMISSION_DENIED) {
+                     errorMessage = 'Permissão de localização negada.';
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    errorMessage = 'Informação de localização indisponível.';
+                } else if (error.code === error.TIMEOUT) {
+                    errorMessage = 'Tempo esgotado para obter localização.';
+                }
+                setLocation(errorMessage);
+            }
+        );
+    } else {
+        setLocation('Geolocalização não suportada.');
+    }
+  }, []); // Run only once on mount
+
+  useEffect(() => {
+    setProfile(prev => ({ ...prev, location: location }));
+  }, [location]);
+
 
   const handleClick = useCallback(() => {
     const newClickCount = clicks + 1;
@@ -50,7 +99,7 @@ const Module1: React.FC<Module1Props> = ({ onBack, logEvent }) => {
         type: 'button_click',
         click_count: newClickCount,
         session_time_ms: Math.round(currentTime),
-        location_guess: 'Carapicuíba, BR',
+        location_guess: location,
         time_since_last_click_ms: Math.round(timeSinceLastClick),
       }
     };
@@ -83,7 +132,7 @@ const Module1: React.FC<Module1Props> = ({ onBack, logEvent }) => {
         return { ...prevProfile, engagement: newEngagement, clickPattern: newClickPattern, estimatedAge: newEstimatedAge };
     });
 
-  }, [clicks, logEvent]);
+  }, [clicks, logEvent, location]);
 
   return (
     <ModuleContainer title="Módulo 1: O Lazer que Vira Labuta" onBack={onBack}>
@@ -101,19 +150,19 @@ const Module1: React.FC<Module1Props> = ({ onBack, logEvent }) => {
               <div key={log.id} className="mb-2 whitespace-pre-wrap break-words">
                 <p className="text-yellow-600 dark:text-yellow-500">{log.timestamp}</p>
                 <p>&gt; Evento: <span className="text-cyan-600 dark:text-cyan-400">{log.event}</span></p>
-                <p>&gt; Dados: <span className="text-gray-800 dark:text-white">{JSON.stringify(log.data)}</span></p>
+                <p>&gt; Dados: <span className="text-gray-800 dark:text-white">{JSON.stringify(log.data, null, 2)}</span></p>
               </div>
             ))}
           </div>
         </div>
 
          {/* Interactive Game Panel */}
-        <div className="lg:col-span-1 bg-gray-200 dark:bg-gray-800 p-6 rounded-lg border-2 border-purple-400 dark:border-[#6A0DAD] text-center">
+        <div className="lg:col-span-1 bg-gray-200 dark:bg-gray-800 p-6 rounded-lg border-2 border-purple-400 dark:border-[#6A0DAD] text-center shadow-lg">
           <h3 className="text-xl font-bold text-purple-700 dark:text-[#FFD700]">Área de Jogo</h3>
           <p className="text-gray-600 dark:text-gray-400 mb-4">Clique para gerar "diversão"!</p>
           <button
             onClick={handleClick}
-            className="bg-[#FFD700] text-[#050F2C] font-bold py-4 px-8 rounded-full text-2xl transform hover:scale-110 transition-transform duration-200"
+            className="bg-[#FFD700] text-[#050F2C] font-bold py-4 px-8 rounded-full text-2xl transform hover:scale-110 transition-transform duration-200 shadow-md hover:shadow-yellow-400/40"
           >
             Clique Aqui!
           </button>
@@ -123,7 +172,7 @@ const Module1: React.FC<Module1Props> = ({ onBack, logEvent }) => {
               <p className="text-gray-600 dark:text-gray-300">Seus Cliques</p>
             </div>
             <div>
-              <p className="text-5xl font-bold text-[#CC0033]">{dataPoints}</p>
+              <p className="text-5xl font-bold text-[#CC0033] animate-red-pulse">{dataPoints}</p>
               <p className="text-gray-600 dark:text-gray-300">Pontos de Dados Gerados</p>
             </div>
           </div>
@@ -158,6 +207,21 @@ const Module1: React.FC<Module1Props> = ({ onBack, logEvent }) => {
         <h3 className="text-2xl font-bold text-teal-600 dark:text-[#00FFFF] mb-2">O que está acontecendo?</h3>
         <p>Veja como um único clique gera múltiplos pontos de dados. Enquanto você se diverte, ferramentas como <strong>PlayFab</strong> ou <strong>Google Spanner</strong> coletam cada ação sua. Elas não servem apenas para melhorar o jogo, mas para criar um perfil detalhado sobre você. Esse perfil pode ser usado para te manter jogando (e gastando) mais, ou vendido para outras empresas. A <strong>Psicopolítica</strong> descreve como a exploração hoje ocorre através do prazer e da auto-otimização, transformando o jogo em uma forma de trabalho não remunerado.</p>
       </div>
+      <style>{`
+        @keyframes red-pulse {
+          0%, 100% { 
+            transform: scale(1);
+            text-shadow: 0 0 5px rgba(255, 50, 50, 0.4);
+          }
+          50% { 
+            transform: scale(1.05);
+            text-shadow: 0 0 20px rgba(255, 50, 50, 0.8);
+          }
+        }
+        .animate-red-pulse {
+          animation: red-pulse 2s ease-in-out infinite;
+        }
+      `}</style>
     </ModuleContainer>
   );
 };
